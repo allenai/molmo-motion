@@ -74,14 +74,11 @@ def _compute_metrics(predictions_jsonl: Path) -> dict:
             if err_vis.size:
                 ade_l2.append(err_vis)
                 for tau in _PWT_THRESHOLDS:
-                    pwt_hits[tau].append((err_vis <= tau).astype(np.float32))
+                    pwt_hits[tau].append((err_vis < tau).astype(np.float32))
 
-            # FDE: last visible frame per point.
-            for p_idx in range(gt.shape[0]):
-                v = vis[p_idx]
-                if v.any():
-                    last_visible = int(np.where(v)[0].max())
-                    fde_l2.append(float(err[p_idx, last_visible]))
+            # FDE: last available future frame, on the points visible there.
+            last = int(row.get("n_future_valid", gt.shape[1])) - 1
+            fde_l2.extend(err[:, last][vis[:, last]].tolist())
             n_records += 1
             unique_clips.add((row.get("video"), row.get("obj"), row.get("t0")))
 

@@ -231,8 +231,11 @@ def main():
         return best_obj_, best_clip_idx_
 
     def _adaptive_n_rollouts(t, num_frames):
-        """Largest r ≥ 1 such that t + r*stride ≤ num_frames-1; clamped by args.n_rollouts."""
+        """Largest r ≥ 1 such that t + r*stride ≤ num_frames-1; clamped by args.n_rollouts.
+        A clip shorter than one stride still gets 1 rollout (scored on its available frames)."""
         max_r = (num_frames - 1 - t) // stride
+        if max_r == 0 and num_frames - 1 - t >= 1:
+            max_r = 1
         return min(args.n_rollouts, int(max_r))
 
     # Build a video-id → entry_idx mapping (used by --config_jsonl_dir)
@@ -505,6 +508,9 @@ def main():
                 future_abs = np.minimum(future_abs, pts_3d.shape[1] - 1)
                 gt_future_raw = pts_3d[chosen][:, future_abs, :]   # (P, total_future, 3)
                 gt_future_vis = visibility[chosen][:, future_abs]  # (P, total_future)
+                # Frames past the clip end were clamped above; don't score them.
+                n_future_valid = int(min(total_future, pts_3d.shape[1] - 1 - t0))
+                gt_future_vis[:, n_future_valid:] = False
 
                 # Initial 3D history (raw absolute) for THIS batch
                 current_hist_raw = pts_3d[chosen][:, hist0, :].astype(np.float32).copy()
@@ -628,6 +634,7 @@ def main():
                     "l2": l2,
                     "mae": mae,
                     "n_visible": n_vis,
+                    "n_future_valid": n_future_valid,
                     "parsed_ok": [r["parsed_ok"] for r in rollouts_records],
                     "rollouts": rollouts_records,
                     "gt_future_raw": gt_future_raw.tolist(),

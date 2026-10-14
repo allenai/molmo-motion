@@ -900,7 +900,7 @@ class Trajectory3DDataset(Dataset):
         path = self.data_roots["worldtrack_bench"] / entry["file"]
         npz_path = path / f"{path.name}.npz"
         with np.load(str(npz_path), allow_pickle=True) as f:
-            tracks_xyz = f["tracks_XYZ"].astype(np.float32)   # (T, N, 3) camera frame
+            tracks_xyz = f["tracks_XYZ"].astype(np.float32)   # (T, N, 3) world frame
             vis = f["visibility"].astype(bool)                 # (T, N)
         # Convert (T, N, 3) → (N, T, 3) to match our convention.
         pts = np.transpose(tracks_xyz, (1, 0, 2))

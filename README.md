@@ -453,8 +453,10 @@ the same setup as the paper:
 - Use **all annotated query points per clip** (not just 8): the model
   predicts in `P=8` chunks, with metrics averaged across all points so
   the comparison is fair across model sizes.
-- Best-of-1 deterministic decoding (greedy) by default; the paper reports
-  best-of-5 numbers, see `--n_samples=5` to reproduce.
+- Deterministic decoding (greedy): the autoregressive model is evaluated
+  once per clip, with a single prediction.
+- All 3D trajectories (HOT3D, WorldTrack, DAVIS) are in the 3D world
+  coordinate frame, in meters.
 
 ## PointMotionBench benchmark eval
 
